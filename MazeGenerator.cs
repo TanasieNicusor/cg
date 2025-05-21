@@ -5,6 +5,10 @@ using UnityEngine;
 public class MazeGenerator : MonoBehaviour
 {
     [SerializeField]
+    private GameObject _speedBoostPrefab;
+    public int _speedBoostCount = 10;
+
+    [SerializeField]
     private MazeCell _mazeCellPrefab;
 
     [SerializeField]
@@ -21,7 +25,19 @@ public class MazeGenerator : MonoBehaviour
         for(int i = 0; i < _mazeWidth; i++)
             for (int j = 0; j < _mazeDepth; j++)
                     _mazeGrid[i, j] = Instantiate(_mazeCellPrefab, new Vector3(i, 0, j), Quaternion.identity);
+
+        int entryY = _mazeDepth / 2;
+        int exitY = _mazeDepth / 2;
+
+        MazeCell entryCell = _mazeGrid[0, entryY];
+        MazeCell exitCell = _mazeGrid[_mazeWidth - 1, exitY];
+
+        entryCell.ClearLeftWall();  
+        exitCell.ClearRightWall();  
+
+
         GenerateMaze(null, _mazeGrid[0, 0]);
+        PlaceSpeedBoosts();
     }
 
     private void GenerateMaze(MazeCell previousCell, MazeCell currentCell)
@@ -105,6 +121,42 @@ public class MazeGenerator : MonoBehaviour
             return;
         }
     }
+
+    private void PlaceSpeedBoosts()
+    {
+        List<MazeCell> allCells = new List<MazeCell>();
+
+
+        foreach (var cell in _mazeGrid)
+        {
+            allCells.Add(cell);
+        }
+
+
+        allCells = allCells.OrderBy(_ => Random.value).ToList();
+
+        int placed = 0;
+
+        foreach (var cell in allCells)
+        {
+            if (placed >= _speedBoostCount)
+                break;
+
+
+            Vector3 pos = cell.transform.position;
+            if ((int)pos.x == 0 || (int)pos.x == _mazeWidth - 1)
+                continue;
+
+
+            Vector3 spawnPos = pos + Vector3.up * 0.5f;
+
+            Instantiate(_speedBoostPrefab, spawnPos, Quaternion.identity);
+            placed++;
+        }
+    }
+
+
+
     void Update()
     {
         
